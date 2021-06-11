@@ -141,9 +141,21 @@ public class Commands {
 		@Override
 		public void execute() {
 			for (AnomalyReport r:reports)
-				{
-					System.out.println((r.timeStep + "\t" + r.description +'\t'));
-				}
+				dio.write((r.timeStep + "\t" + r.description +'\t'));			
+			dio.write("done");
+		}
+		}
+	
+	public class reportAnomalies extends Command{
+
+		public reportAnomalies() {
+			super("This function report anomalies to the client");
+		}
+
+		@Override
+		public void execute() {
+			for (AnomalyReport r:reports)
+				dio.write((r.timeStep + "\t" + r.description +'\t'));
 			}
 		}
 }

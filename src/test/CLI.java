@@ -42,5 +42,7 @@ public class CLI {
 		this.commands.get(this.dio.readVal()).execute();
 		this.commands.get(this.dio.readVal()).execute();
 		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
 	}
 }
