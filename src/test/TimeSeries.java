@@ -88,6 +88,9 @@ public class TimeSeries {
 		return floatArray;
 	}
 	
+	public int getLen() {
+		return (getArray(getFeatures()[0]).length);
+	}
 
 
 	//This function get a line and adds it to its location
