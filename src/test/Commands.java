@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +40,7 @@ public class Commands {
 	public class CSV{
 		private String filename;
 		private String DELIMITER = ",";
-		public ArrayList<ArrayList<String>> list;
+		public ArrayList<String[]> list;
 		
 		
 		public CSV(String filename){
@@ -52,6 +54,7 @@ public class Commands {
 						bw.write(line+"\n");
 					line = dio.readText();
 				}
+				
 				bw.close();
 	        }
 			catch (IOException e) {
@@ -61,14 +64,15 @@ public class Commands {
 		
 		public void readCSV(){
 			String line = "";
+			list = new ArrayList<String[]>() ;
 	        try (FileReader reader = new FileReader(this.filename);
 	                BufferedReader bw = new BufferedReader(reader))
 	        {
-				while (!line.equals("done")) {
+				while (line != null) {
+					if (!line.equals("")) {
+						list.add(line.split(DELIMITER));
+					}
 					line = bw.readLine();
-					if (!line.equals(""))
-						list.add((ArrayList<String>) Arrays.asList(line.split(DELIMITER)));
-					
 				}
 				bw.close();
 	        }
@@ -155,7 +159,7 @@ public class Commands {
 			ad.learnNormal(ts);
 			TimeSeries ts2=new TimeSeries("test.csv");
 			reports = ad.detect(ts2);
-			dio.write("complete anomaly detection\n");
+			dio.write("anomaly detection complete.\n");
 			}
 		}
 	
@@ -168,8 +172,8 @@ public class Commands {
 		@Override
 		public void execute() {
 			for (AnomalyReport r:reports)
-				dio.write((r.timeStep + "\t" + r.description +'\t'));			
-			dio.write("done");
+				dio.write((r.timeStep + "\t" + r.description +'\n'));			
+			dio.write("Done.\n");
 			}
 		}
 	
@@ -185,38 +189,38 @@ public class Commands {
 			//String filename = dio.readText();
 			CSV csvfile = new CSV("shimi.csv"); // TODO : CHANGE THE FILENAME
 			dio.write("Upload complete.\n");
-			dio.write("Analyzing...");
 			csvfile.readCSV();
 			
 			// This method checks if the window is between start and end time.
-			int tp = 0;
-			int fp = 0;
-			int p = 0;
-			int N = sumValues(csvfile.list);
-			int n = NUMBER_LINES;
-			for(ArrayList<String> l: csvfile.list) {
+			float tp = 0;
+			float fp = 0;
+			float p = csvfile.list.size();
+			float n = NUMBER_LINES;
+			float N = n - sumValues(csvfile.list);
+			for(String[] l: csvfile.list) {
 				int temp = checkWindow(l);
-				if (temp > 0) tp++;
-				p+= temp;
+				if (temp > 0) {tp++;}
+				else {fp++;};
 			}
-			
-			dio.write("True Positive Rate:" + String.format("%.3f", (tp/p)));
-			dio.write("False Positive Rate:" + String.format("%.3f", (fp/n-N)));
+			DecimalFormat df = new DecimalFormat("0.0##");
+			df.setRoundingMode(RoundingMode.DOWN); 
+			dio.write(new StringBuilder("True Positive Rate: ").append(df.format((tp/p))).append("\n").toString());
+			dio.write(new StringBuilder("False Positive Rate: ").append(df.format((fp/(N)))).append("\n").toString());
 			}
 		
-		public int sumValues(ArrayList<ArrayList<String>> l) {
+		public int sumValues(ArrayList<String[]> l) {
 			int sum = 0;
-			for(ArrayList<String> small: l)
+			for(String[] small: l)
 			{
-				sum += (Integer.parseInt(small.get(0)) - Integer.parseInt(small.get(1)))+1;
+				sum += (Integer.parseInt(small[1]) - Integer.parseInt(small[0]))+1;
 			}
 			return sum;
 		}
 		
-		public int checkWindow(ArrayList<String> l) { //TODO : BY COR FEATURE
+		public int checkWindow(String[] l) { //TODO : BY COR FEATURE
 			int windowsize = 0;
-			int start = Integer.parseInt(l.get(0));
-			int end = Integer.parseInt(l.get(0));
+			int start = Integer.parseInt(l[0]);
+			int end = Integer.parseInt(l[1]);
 			for (AnomalyReport r:reports) {
 				if ((r.timeStep >= start) && (r.timeStep <= end))
 					windowsize++;

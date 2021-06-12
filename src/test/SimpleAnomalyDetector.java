@@ -92,7 +92,7 @@ public class SimpleAnomalyDetector implements TimeSeriesAnomalyDetector {
 					temp_dev = Math.abs(StatLib.dev(new Point(f1[i],f2[i]), l));
 					if (temp_dev > this.max.get(c.feature1)*1.1) {
 						String description = String.format("%s-%s", c.feature1, c.feature2);
-						ar.add(new AnomalyReport(description,(long)i+1 , temp_dev));
+						ar.add(new AnomalyReport(description,(long)i+1 ));
 					}
 				}				
 			}
