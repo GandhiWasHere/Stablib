@@ -20,7 +20,7 @@ public class CLI {
 		commands.put(2f, c.new ChangeCorr());
 		commands.put(3f, c.new InitialTimeSeries());
 		commands.put(4f, c.new reportAnomalies());
-		
+		commands.put(5f, c.new uploadAnomalies());
 		// implement
 	}
 	
@@ -37,12 +37,24 @@ public class CLI {
 		this.dio.write(s.toString());
 		float c = this.dio.readVal();
 		this.commands.get(c).execute();
-		
+		this.dio.write(s.toString());
 		// THERE IS A BIG ERROR WITH THE WRITING TO THE FILE I PROBBLY ADD ONE CHAR THAT DONT NEED TO BE THERE
-		this.commands.get(this.dio.readVal()).execute();
-		this.commands.get(this.dio.readVal()).execute();
 		this.commands.get(this.dio.readVal()).execute();
 		this.dio.write(s.toString());
 		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
 	}
 }
