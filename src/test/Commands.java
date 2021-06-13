@@ -14,12 +14,6 @@ import java.util.List;
 
 
 public class Commands {
-	
-	// i am not sure this is the ideal way
-	//TODO
-	public static float cor ;
-	public static List<AnomalyReport> reports;
-	public static int NUMBER_LINES = 0;
 
 	// Default IO interface
 	public interface DefaultIO{
@@ -86,9 +80,31 @@ public class Commands {
 	
 	// the shared state of all commands
 	private class SharedState{
-		// implement here whatever you need
+		public float cor ;
+		public List<AnomalyReport> reports;
+		public int NUMBER_LINES = 0;
+		public ArrayList<RangeAnomaly> rAnomalies;
+		public ArrayList<RangeAnomaly> uAnomalies;
+		
 		
 	}
+	
+	public class RangeAnomaly {
+		public String feature;
+		public long start;
+		public long end;
+		public RangeAnomaly(long l, long timeStep , String feature) {
+			this.feature = feature;
+			this.start = l;
+			this.end = timeStep;
+		}
+		public RangeAnomaly() {
+			this.feature = null;
+			this.start = 0;
+			this.end = 0;
+		}
+	}
+	
 	
 	private  SharedState sharedState=new SharedState();
 
@@ -138,10 +154,10 @@ public class Commands {
 			// correlation value is static public so we can use it anywhere in the class.
 			dio.write("The current correlation threshold is 0.9\n"
 					+ "Type a new threshold\n");
-			cor = dio.readVal();
-			while (cor > 1 | cor < 0) {
+			sharedState.cor = dio.readVal();
+			while (sharedState.cor > 1 | sharedState.cor < 0) {
 				dio.write("please choose a value between 0 and 1.\n");
-				cor = dio.readVal();
+				sharedState.cor = dio.readVal();
 			}
 		}
 		}
@@ -154,11 +170,11 @@ public class Commands {
 		@Override
 		public void execute() {
 			TimeSeries ts = new TimeSeries("train.csv");
-			NUMBER_LINES = ts.getLen();
-			SimpleAnomalyDetector ad=new SimpleAnomalyDetector(cor);
+			sharedState.NUMBER_LINES = ts.getLen();
+			SimpleAnomalyDetector ad=new SimpleAnomalyDetector(sharedState.cor);
 			ad.learnNormal(ts);
 			TimeSeries ts2=new TimeSeries("test.csv");
-			reports = ad.detect(ts2);
+			sharedState.reports = ad.detect(ts2);
 			dio.write("anomaly detection complete.\n");
 			}
 		}
@@ -171,7 +187,7 @@ public class Commands {
 
 		@Override
 		public void execute() {
-			for (AnomalyReport r:reports)
+			for (AnomalyReport r:sharedState.reports)
 				dio.write((r.timeStep + "\t" + r.description +'\n'));			
 			dio.write("Done.\n");
 			}
@@ -191,16 +207,36 @@ public class Commands {
 			dio.write("Upload complete.\n");
 			csvfile.readCSV();
 			
+			// Parse anomalies into a range of anomalies seperated by type
+			sharedState.rAnomalies = new ArrayList<RangeAnomaly>();
+			AnomalyParser();
+			
+			// Parse uploaded anomalies
+			sharedState.uAnomalies = new ArrayList<RangeAnomaly>();
+			for(String[] l: csvfile.list) {
+				AnomalyParser(l);
+			}
 			// This method checks if the window is between start and end time.
 			float tp = 0;
 			float fp = 0;
 			float p = csvfile.list.size();
-			float n = NUMBER_LINES;
+			float n = sharedState.NUMBER_LINES;
 			float N = n - sumValues(csvfile.list);
-			for(String[] l: csvfile.list) {
-				int temp = checkWindow(l);
-				if (temp > 0) {tp++;}
-				else {fp++;};
+			for(RangeAnomaly r: sharedState.rAnomalies)
+				for(RangeAnomaly u: sharedState.uAnomalies)
+					if (r.start <= u.end && r.end >= u.start) {
+						tp++;
+					}
+			boolean af;
+			for(RangeAnomaly r: sharedState.rAnomalies) {
+				af = false;
+				for(RangeAnomaly u: sharedState.uAnomalies)
+					if (r.start <= u.end && r.end >= u.start) {
+						af = true;
+						break;
+					}
+				if (!af) 
+					fp++;
 			}
 			DecimalFormat df = new DecimalFormat("0.0##");
 			df.setRoundingMode(RoundingMode.DOWN); 
@@ -217,16 +253,31 @@ public class Commands {
 			return sum;
 		}
 		
-		public int checkWindow(String[] l) { //TODO : BY COR FEATURE
-			int windowsize = 0;
-			int start = Integer.parseInt(l[0]);
-			int end = Integer.parseInt(l[1]);
-			for (AnomalyReport r:reports) {
-				if ((r.timeStep >= start) && (r.timeStep <= end))
-					windowsize++;
-			}
-			return windowsize;
+		public void AnomalyParser(String[] l) { 
+			sharedState.uAnomalies.add(new RangeAnomaly(Long.parseLong(l[0]),
+				Long.parseLong(l[1]),""));
 		}
+		public  void AnomalyParser() {
+			int counter = 0;
+			AnomalyReport prev = sharedState.reports.get(0);
+			for (int i = 1; i< sharedState.reports.size(); i++) {
+				AnomalyReport current = sharedState.reports.get(i);
+				if (prev.description.equals(current.description) && (prev.timeStep == current.timeStep-1)) {counter++;}
+				else {
+					if (counter > 0){
+						sharedState.rAnomalies.add(new RangeAnomaly(prev.timeStep-counter,prev.timeStep,prev.description));
+						counter = 0;
+					}
+				}
+				prev = current;
+			}
+			if (counter > 0){
+				sharedState.rAnomalies.add(new RangeAnomaly(prev.timeStep-counter,prev.timeStep,prev.description));
+				counter = 0;
+			}
+		}
+		
+
 		
 	}
 }
