@@ -31,6 +31,7 @@ public class Commands {
 		this.dio=dio;
 	}
 	
+	// read from data write to csv
 	public class CSV{
 		private String filename;
 		private String DELIMITER = ",";
@@ -89,6 +90,7 @@ public class Commands {
 		
 	}
 	
+	// Class that defines a range window of anomaly
 	public class RangeAnomaly {
 		public String feature;
 		public long start;
@@ -169,6 +171,8 @@ public class Commands {
 
 		@Override
 		public void execute() {
+			
+			// initial time series and start learning
 			TimeSeries ts = new TimeSeries("train.csv");
 			sharedState.NUMBER_LINES = ts.getLen();
 			SimpleAnomalyDetector ad=new SimpleAnomalyDetector(sharedState.cor);
@@ -187,6 +191,8 @@ public class Commands {
 
 		@Override
 		public void execute() {
+			
+			// report all anomlies
 			for (AnomalyReport r:sharedState.reports)
 				dio.write((r.timeStep + "\t" + r.description +'\n'));			
 			dio.write("Done.\n");
@@ -202,7 +208,6 @@ public class Commands {
 		@Override
 		public void execute() {
 			dio.write("Please upload your local anomalies file.\n");
-			//String filename = dio.readText();
 			CSV csvfile = new CSV("shimi.csv"); // TODO : CHANGE THE FILENAME
 			dio.write("Upload complete.\n");
 			csvfile.readCSV();
@@ -276,8 +281,16 @@ public class Commands {
 				counter = 0;
 			}
 		}
-		
-
-		
 	}
-}
+	public class exit extends Command{
+
+		public exit() {
+			super("This function exit");
+		}
+
+		@Override
+		public void execute() {
+			dio.write("bye\n");
+			}
+		}
+		}

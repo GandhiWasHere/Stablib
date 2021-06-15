@@ -21,10 +21,13 @@ public class CLI {
 		commands.put(3f, c.new InitialTimeSeries());
 		commands.put(4f, c.new reportAnomalies());
 		commands.put(5f, c.new uploadAnomalies());
+		commands.put(6f, c.new exit());
 		// implement
 	}
 	
 	public void start() {
+		
+		// It depends on the input of the server
 		StringBuilder s = new StringBuilder()
 				.append("Welcome to the Anomaly Detection Server.\n")
 				.append("Please choose an option:\n")
@@ -38,14 +41,6 @@ public class CLI {
 		float c = this.dio.readVal();
 		this.commands.get(c).execute();
 		this.dio.write(s.toString());
-		// THERE IS A BIG ERROR WITH THE WRITING TO THE FILE I PROBBLY ADD ONE CHAR THAT DONT NEED TO BE THERE
-		this.commands.get(this.dio.readVal()).execute();
-		this.dio.write(s.toString());
-		this.commands.get(this.dio.readVal()).execute();
-		this.dio.write(s.toString());
-		this.commands.get(this.dio.readVal()).execute();
-		this.dio.write(s.toString());
-		
 		this.commands.get(this.dio.readVal()).execute();
 		this.dio.write(s.toString());
 		this.commands.get(this.dio.readVal()).execute();
@@ -56,5 +51,12 @@ public class CLI {
 		this.dio.write(s.toString());
 		this.commands.get(this.dio.readVal()).execute();
 		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
+		this.dio.write(s.toString());
+		this.commands.get(this.dio.readVal()).execute();
 	}
 }
